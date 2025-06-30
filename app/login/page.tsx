@@ -122,7 +122,7 @@ export default function Login() {
           title: "Welcome back!",
           description: "You have successfully logged in.",
         })
-        router.push("/dashboard")
+        router.push("/home")
       } else {
         setError(result.error || "Login failed")
 

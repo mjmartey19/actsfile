@@ -56,13 +56,10 @@ export function Navigation() {
   }, [pathname])
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/home", label: "Home", icon: Home },
     { href: "/post-act", label: "Post Act", icon: Plus },
     { href: "/discover", label: "Discover", icon: Search },
-    { href: "/art-gallery", label: "Art Gallery", icon: ImageIcon },
     { href: "/biography", label: "Biography", icon: BookOpen },
-    { href: "/groups", label: "Groups", icon: Users },
-    { href: "/organizations", label: "Organizations", icon: Building2 },
     { href: "/awards", label: "Awards", icon: Trophy },
   ]
 
@@ -152,7 +149,7 @@ export function Navigation() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link href="/home" className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">AF</span>
               </div>

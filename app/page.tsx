@@ -4,6 +4,49 @@ import { Badge } from "@/components/ui/badge"
 import { Heart, Users, Target, Award, Globe, BookOpen, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
+const SDGs = [
+  { id: 1, name: "No Poverty", color: "bg-red-600" },
+  { id: 2, name: "Zero Hunger", color: "bg-yellow-600" },
+  { id: 3, name: "Good Health and Well-being", color: "bg-green-600" },
+  { id: 4, name: "Quality Education", color: "bg-red-700" },
+  { id: 5, name: "Gender Equality", color: "bg-orange-600" },
+  { id: 6, name: "Clean Water and Sanitation", color: "bg-blue-400" },
+  { id: 7, name: "Affordable and Clean Energy", color: "bg-yellow-500" },
+  { id: 8, name: "Decent Work and Economic Growth", color: "bg-red-800" },
+  { id: 9, name: "Industry, Innovation and Infrastructure", color: "bg-orange-700" },
+  { id: 10, name: "Reduced Inequalities", color: "bg-pink-600" },
+  { id: 11, name: "Sustainable Cities and Communities", color: "bg-orange-500" },
+  { id: 12, name: "Responsible Consumption and Production", color: "bg-yellow-700" },
+  { id: 13, name: "Climate Action", color: "bg-green-700" },
+  { id: 14, name: "Life Below Water", color: "bg-blue-600" },
+  { id: 15, name: "Life on Land", color: "bg-green-800" },
+  { id: 16, name: "Peace, Justice and Strong Institutions", color: "bg-blue-800" },
+  { id: 17, name: "Partnerships for the Goals", color: "bg-indigo-700" },
+]
+
+const AGENDA = [
+  { id: 1, name: "A prosperous Africa based on inclusive growth", color: "bg-green-700" },
+  { id: 2, name: "Well-educated citizens & skills revolution", color: "bg-blue-600" },
+  { id: 3, name: "Healthy and well-nourished citizens", color: "bg-red-600" },
+  { id: 4, name: "Transformative, inclusive economy", color: "bg-yellow-500" },
+  { id: 5, name: "Modern agriculture and blue economy", color: "bg-teal-600" },
+  { id: 6, name: "Environmentally sustainable climate-resilient economy", color: "bg-green-900" },
+  { id: 7, name: "Democracy, respect for human rights, justice", color: "bg-purple-600" },
+  { id: 8, name: "United Africa (politically, economically)", color: "bg-indigo-600" },
+  { id: 9, name: "Key continental financial and institutions", color: "bg-gray-600" },
+  { id: 10, name: "World's most resilient cultural identity", color: "bg-pink-600" },
+  { id: 11, name: "Democratic values, norms, governance", color: "bg-blue-800" },
+  { id: 12, name: "Capable institutions and transformative leadership", color: "bg-yellow-600" },
+  { id: 13, name: "Peaceful and secure Africa", color: "bg-red-800" },
+  { id: 14, name: "Strong participatory & accountable institutions", color: "bg-purple-800" },
+  { id: 15, name: "Africa with a strong cultural identity", color: "bg-orange-500" },
+  { id: 16, name: "African cultural renaissance", color: "bg-pink-500" },
+  { id: 17, name: "Full gender equality", color: "bg-red-500" },
+  { id: 18, name: "Engaged and empowered youth", color: "bg-blue-500" },
+  { id: 19, name: "Africa as a major partner in global affairs", color: "bg-teal-500" },
+  { id: 20, name: "Africa takes full responsibility for development", color: "bg-gray-800" },
+]
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -111,27 +154,28 @@ export default function HomePage() {
       {/* SDG Section */}
       <section className="bg-white py-16">
         <div className="container mx-auto px-4">
+          {/* SDGs */}
           <h2 className="text-3xl font-bold text-center mb-8">UN Sustainable Development Goals</h2>
           <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
             Connect your acts to the 17 UN SDGs and see how your contributions align with global sustainability targets.
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              { id: 1, name: "No Poverty", color: "bg-red-600" },
-              { id: 2, name: "Zero Hunger", color: "bg-yellow-600" },
-              { id: 3, name: "Good Health", color: "bg-green-600" },
-              { id: 4, name: "Quality Education", color: "bg-red-700" },
-              { id: 5, name: "Gender Equality", color: "bg-orange-600" },
-              { id: 6, name: "Clean Water", color: "bg-blue-400" },
-              { id: 7, name: "Clean Energy", color: "bg-yellow-500" },
-              { id: 8, name: "Decent Work", color: "bg-red-800" },
-              { id: 9, name: "Innovation", color: "bg-orange-700" },
-              { id: 10, name: "Reduced Inequalities", color: "bg-pink-600" },
-              { id: 11, name: "Sustainable Cities", color: "bg-orange-500" },
-              { id: 12, name: "Responsible Consumption", color: "bg-yellow-700" },
-            ].map((sdg) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-20">
+            {SDGs.map((sdg) => (
               <Badge key={sdg.id} className={`${sdg.color} text-white p-3 text-center justify-center`}>
                 {sdg.id}. {sdg.name}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Agenda 2063 */}
+          <h2 className="text-3xl font-bold text-center mb-8">African Union Agenda 2063 Goals</h2>
+          <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+            Discover how Africa envisions its future and how your actions contribute to the 20 goals of Agenda 2063 — Africa’s blueprint and master plan for transforming the continent into a global powerhouse.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {AGENDA.map((goal) => (
+              <Badge key={goal.id} className={`${goal.color} text-white p-3 text-center justify-center`}>
+                {goal.id}. {goal.name}
               </Badge>
             ))}
           </div>
