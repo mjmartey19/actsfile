@@ -1,18 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+import {
+    ArrowLeft, CalendarIcon, MapPin, ImageIcon, Video, Mic, Sparkles, Check, X, Plus, Users, BookOpen, Upload
+} from "lucide-react"
+import Link from "next/link"
+import { format } from "date-fns"
+
 import {
     SDG_GOALS,
     AFRICA_AGENDA_2063,
@@ -20,16 +28,15 @@ import {
     PRIVACY_OPTIONS,
     ACT_CATEGORIES,
 } from "@/lib/constants"
-import { Upload, MapPin, Calendar, Users, Sparkles, Plus, BookOpen, ImageIcon } from "lucide-react"
+import { Navigation } from "@/components/navigation"
 
-export default function PostAct() {
+export default function PostActPage() {
     const [formData, setFormData] = useState({
         title: "",
         description: "",
         category: "",
         location: "",
-        date: "",
-        privacy: "public",
+        date: new Date(),
         participants: "",
         impact: "",
         challenges: "",
@@ -37,25 +44,65 @@ export default function PostAct() {
         includeInBiography: false,
         customBiographyDescription: "",
         biographyOrder: 1,
+        privacy: "public",
     })
 
     const [selectedSDGs, setSelectedSDGs] = useState<number[]>([])
     const [selectedAgenda2063, setSelectedAgenda2063] = useState<number[]>([])
     const [selectedOtherTargets, setSelectedOtherTargets] = useState<number[]>([])
-    const [aiSuggestions, setAiSuggestions] = useState({
-        sdgs: [1, 2, 11],
-        agenda2063: [1, 6],
-        others: [1, 3],
-    })
+
+    const [suggestedSDGs, setSuggestedSDGs] = useState([
+        { id: 3, name: "Good Health and Well-being", confidence: 0.92, confirmed: false },
+        { id: 11, name: "Sustainable Cities and Communities", confidence: 0.78, confirmed: false },
+        { id: 17, name: "Partnerships for the Goals", confidence: 0.65, confirmed: false },
+    ])
+
+    const [suggestedAgenda2063, setSuggestedAgenda2063] = useState([
+        { id: 1, name: "A prosperous Africa based on inclusive growth and sustainable development", confidence: 0.85, confirmed: false },
+    ])
+
+    const [suggestedOtherTargets, setSuggestedOtherTargets] = useState([])
+
+    const [isAnalyzing, setIsAnalyzing] = useState(false)
+    const [showCalendar, setShowCalendar] = useState(false)
     const [showAiSuggestions, setShowAiSuggestions] = useState(false)
 
-    const handleInputChange = (field: string, value: string | boolean | number) => {
+    const handleInputChange = (field: string, value: string | number | boolean | Date) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
+      }
 
-        // Simulate AI analysis when description changes
-        if (field === "description" && typeof value === "string" && value.length > 50) {
+    const analyzeContent = async () => {
+        if (!formData.title && !formData.description) return
+
+        setIsAnalyzing(true)
+        // Simulate AI analysis
+        setTimeout(() => {
+            setIsAnalyzing(false)
             setShowAiSuggestions(true)
+            // Update suggested SDGs based on content
+        }, 2000)
+    }
+
+    const confirmSDG = (sdgId: number) => {
+        setSuggestedSDGs((prev) => prev.map((sdg) => (sdg.id === sdgId ? { ...sdg, confirmed: true } : sdg)))
+        if (!selectedSDGs.includes(sdgId)) {
+            setSelectedSDGs((prev) => [...prev, sdgId])
         }
+    }
+
+    const removeSDG = (sdgId: number) => {
+        setSuggestedSDGs((prev) => prev.filter((sdg) => sdg.id !== sdgId))
+    }
+
+    const confirmAgenda2063 = (id: number) => {
+        setSuggestedAgenda2063((prev) => prev.map((item) => (item.id === id ? { ...item, confirmed: true } : item)))
+        if (!selectedAgenda2063.includes(id)) {
+            setSelectedAgenda2063((prev) => [...prev, id])
+        }
+    }
+
+    const removeAgenda2063 = (id: number) => {
+        setSuggestedAgenda2063((prev) => prev.filter((item) => item.id !== id))
     }
 
     const toggleSDG = (id: number) => {
@@ -70,411 +117,442 @@ export default function PostAct() {
         setSelectedOtherTargets((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
     }
 
-    const acceptAiSuggestion = (type: "sdgs" | "agenda2063" | "others", id: number) => {
-        if (type === "sdgs") {
-            toggleSDG(id)
-        } else if (type === "agenda2063") {
-            toggleAgenda2063(id)
-        } else {
-            toggleOtherTarget(id)
-        }
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        console.log("Submitting act:", {
+            ...formData,
+            sdgs: selectedSDGs,
+            agenda2063: selectedAgenda2063,
+            otherTargets: selectedOtherTargets
+        })
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
             <Navigation />
 
-            <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
-                <div className="max-w-4xl mx-auto">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-xl sm:text-2xl">Share Your Act</CardTitle>
-                            <CardDescription className="text-sm sm:text-base">
-                                Document your positive impact and connect it with global goals
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {/* Basic Information */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="title">Act Title *</Label>
-                                    <Input
-                                        id="title"
-                                        placeholder="Give your act a compelling title"
-                                        value={formData.title}
-                                        onChange={(e) => handleInputChange("title", e.target.value)}
-                                    />
-                                </div>
+            <div className="container mx-auto px-4 py-8 max-w-6xl">
+                <div className="grid lg:grid-cols-3 gap-8">
+                    {/* Main Form */}
+                    <div className="lg:col-span-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Share Your Positive Act</CardTitle>
+                                <CardDescription>
+                                    Document your contribution to society and let our AI suggest relevant goals
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    {/* Title and Category */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="title">Title *</Label>
+                                            <Input
+                                                id="title"
+                                                placeholder="Give your act a descriptive title"
+                                                value={formData.title}
+                                                onChange={(e) => handleInputChange("title", e.target.value)}
+                                                required
+                                            />
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="category">Category</Label>
-                                    <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {ACT_CATEGORIES.map((category) => (
-                                                <SelectItem key={category} value={category}>
-                                                    {category}
-                                                </SelectItem>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="category">Category</Label>
+                                            <Select
+                                                value={formData.category}
+                                                onValueChange={(value) => handleInputChange("category", value)}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {ACT_CATEGORIES.map((category) => (
+                                                        <SelectItem key={category} value={category}>
+                                                            {category}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="description">Description *</Label>
+                                        <Textarea
+                                            id="description"
+                                            placeholder="Describe your act in detail. What did you do? Who did it help? What was the impact?"
+                                            rows={4}
+                                            value={formData.description}
+                                            onChange={(e) => handleInputChange("description", e.target.value)}
+                                            required
+                                        />
+                                        <div className="flex justify-between items-center">
+                                            <p className="text-sm text-gray-500">Be specific about the impact and beneficiaries</p>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={analyzeContent}
+                                                disabled={isAnalyzing || (!formData.title && !formData.description)}
+                                            >
+                                                <Sparkles className="h-4 w-4 mr-2" />
+                                                {isAnalyzing ? "Analyzing..." : "Analyze Goals"}
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Date and Location */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Date */}
+                                        <div className="space-y-2">
+                                            <Label>When did this act occur?</Label>
+                                            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="outline" className="w-full justify-start">
+                                                        <CalendarIcon className="h-4 w-4 mr-2" />
+                                                        {format(formData.date, "PPP")}
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0">
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={formData.date}
+                                                        onSelect={(date) => {
+                                                            if (date) {
+                                                                handleInputChange("date", date)
+                                                              }
+                                                            setShowCalendar(false)
+                                                        }}
+                                                        initialFocus
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+
+                                        {/* Location */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="location">Location (Optional)</Label>
+                                            <div className="relative">
+                                                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                                <Input
+                                                    id="location"
+                                                    placeholder="Where did this act take place?"
+                                                    className="pl-10"
+                                                    value={formData.location}
+                                                    onChange={(e) => handleInputChange("location", e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Participants */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="participants">Number of People Involved</Label>
+                                        <div className="relative">
+                                            <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <Input
+                                                id="participants"
+                                                placeholder="e.g., 25 volunteers, 100 beneficiaries"
+                                                className="pl-10"
+                                                value={formData.participants}
+                                                onChange={(e) => handleInputChange("participants", e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Impact and Challenges */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="impact">Impact Achieved</Label>
+                                            <Textarea
+                                                id="impact"
+                                                placeholder="Describe the positive impact and outcomes of your act..."
+                                                value={formData.impact}
+                                                onChange={(e) => handleInputChange("impact", e.target.value)}
+                                                rows={3}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="challenges">Challenges Faced</Label>
+                                            <Textarea
+                                                id="challenges"
+                                                placeholder="What challenges did you encounter and how did you overcome them?"
+                                                value={formData.challenges}
+                                                onChange={(e) => handleInputChange("challenges", e.target.value)}
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Media Upload */}
+                                    <div className="space-y-2">
+                                        <Label>Media (Optional)</Label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                            <div className="flex justify-center space-x-4 mb-4">
+                                                <Button type="button" variant="outline" size="sm">
+                                                    <ImageIcon className="h-4 w-4 mr-2" />
+                                                    Choose Files
+                                                </Button>
+                                              
+                                            </div>
+                                            <p className="text-sm text-gray-500">Upload photos, videos, or audio to support your act</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Biography Settings */}
+                                    <Card className="bg-green-50 border-green-200">
+                                        <CardHeader className="p-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <BookOpen className="h-5 w-5 text-green-600" />
+                                                    <Label htmlFor="include-biography">Include in Biography</Label>
+                                                </div>
+                                                <Switch
+                                                    id="include-biography"
+                                                    checked={formData.includeInBiography}
+                                                    onCheckedChange={(checked) => handleInputChange("includeInBiography", checked)}
+                                                />
+                                            </div>
+                                        </CardHeader>
+                                        {formData.includeInBiography && (
+                                            <CardContent className="space-y-4 pt-0">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="bio-description">Custom Biography Description</Label>
+                                                    <Textarea
+                                                        id="bio-description"
+                                                        placeholder="How should this act be described in your biography? (Leave blank to use the main description)"
+                                                        value={formData.customBiographyDescription}
+                                                        onChange={(e) => handleInputChange("customBiographyDescription", e.target.value)}
+                                                        rows={3}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="bio-order">Biography Order</Label>
+                                                    <Input
+                                                        id="bio-order"
+                                                        type="number"
+                                                        min="1"
+                                                        placeholder="1"
+                                                        value={formData.biographyOrder}
+                                                        onChange={(e) => handleInputChange("biographyOrder", Number.parseInt(e.target.value) || 1)}
+                                                        className="w-32"
+                                                    />
+                                                    <p className="text-xs text-gray-500">
+                                                        Lower numbers appear first in your biography (1 = first)
+                                                    </p>
+                                                </div>
+                                            </CardContent>
+                                        )}
+                                    </Card>
+
+                                    {/* Privacy Settings */}
+                                    <div className="space-y-3">
+                                        <Label>Who can see this act?</Label>
+                                        <RadioGroup value={formData.privacy} onValueChange={(value) => handleInputChange("privacy", value)}>
+                                            {PRIVACY_OPTIONS.map((option) => (
+                                                <div key={option.value} className="flex items-start space-x-2">
+                                                    <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
+                                                    <Label htmlFor={option.value} className="flex-1 cursor-pointer">
+                                                        <div>
+                                                            <p className="font-medium text-sm">{option.label}</p>
+                                                            <p className="text-xs text-gray-600">{option.description}</p>
+                                                        </div>
+                                                    </Label>
+                                                </div>
                                             ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+                                        </RadioGroup>
+                                    </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description *</Label>
-                                <Textarea
-                                    id="description"
-                                    placeholder="Describe your act in detail. What did you do? What was the impact? What challenges did you face?"
-                                    className="min-h-[120px] resize-none"
-                                    value={formData.description}
-                                    onChange={(e) => handleInputChange("description", e.target.value)}
-                                />
-                                <p className="text-xs text-muted-foreground">{formData.description.length}/1000 characters</p>
-                            </div>
-
-                            {/* AI Suggestions */}
-                            {showAiSuggestions && (
-                                <Card className="bg-blue-50 border-blue-200">
-                                    <CardHeader>
-                                        <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
-                                            <Sparkles className="h-5 w-5 text-blue-600" />
-                                            <span>AI Suggestions</span>
-                                        </CardTitle>
-                                        <CardDescription className="text-sm sm:text-base">
-                                            Based on your description, we suggest these relevant goals:
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div>
-                                            <h4 className="font-medium mb-2 text-sm sm:text-base">Suggested SDGs:</h4>
-                                            <div className="flex flex-wrap gap-2">
-                                                {aiSuggestions.sdgs.map((id) => {
-                                                    const sdg = SDG_GOALS.find((s) => s.id === id)
-                                                    return (
-                                                        <Button
-                                                            key={id}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => acceptAiSuggestion("sdgs", id)}
-                                                            className="text-xs h-auto py-2 px-3"
-                                                        >
-                                                            <Plus className="h-3 w-3 mr-1" />
-                                                            <span className="hidden sm:inline">SDG {sdg?.id}: </span>
-                                                            <span className="sm:hidden">SDG {sdg?.id}</span>
-                                                            <span className="hidden md:inline">{sdg?.title}</span>
-                                                        </Button>
-                                                    )
-                                                })}
-                                            </div>
+                                    <div className="flex justify-between pt-4 border-t">
+                                        <Button type="button" variant="outline">
+                                            Save as Draft
+                                        </Button>
+                                        <div className="flex space-x-3">
+                                            <Button type="button" variant="outline">
+                                                Preview
+                                            </Button>
+                                            <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                                                Post Act
+                                            </Button>
                                         </div>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
 
-                                        <div>
-                                            <h4 className="font-medium mb-2 text-sm sm:text-base">Suggested Africa's Agenda 2063:</h4>
-                                            <div className="flex flex-wrap gap-2">
-                                                {aiSuggestions.agenda2063.map((id) => {
-                                                    const aspiration = AFRICA_AGENDA_2063.find((a) => a.id === id)
-                                                    return (
-                                                        <Button
-                                                            key={id}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => acceptAiSuggestion("agenda2063", id)}
-                                                            className="text-xs h-auto py-2 px-3"
-                                                        >
-                                                            <Plus className="h-3 w-3 mr-1" />
-                                                            Aspiration {aspiration?.id}
-                                                        </Button>
-                                                    )
-                                                })}
-                                            </div>
+                    {/* Goal Mapping Sidebar */}
+                    <div className="lg:col-span-1">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center">
+                                    <Sparkles className="h-5 w-5 mr-2 text-yellow-500" />
+                                    Goal Mapping
+                                </CardTitle>
+                                <CardDescription>AI-suggested Sustainable Development Goals</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {isAnalyzing && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span>Analyzing content...</span>
+                                            <span>75%</span>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            )}
+                                        <Progress value={75} className="h-2" />
+                                    </div>
+                                )}
 
-                            {/* Goal Selection Tabs */}
-                            <Tabs defaultValue="sdgs" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3 h-auto">
-                                    <TabsTrigger value="sdgs" className="text-xs sm:text-sm">
-                                        SDGs ({selectedSDGs.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="agenda2063" className="text-xs sm:text-sm">
-                                        <span className="hidden sm:inline">Africa 2063</span>
-                                        <span className="sm:hidden">A2063</span> ({selectedAgenda2063.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="others" className="text-xs sm:text-sm">
-                                        <span className="hidden sm:inline">Other Targets</span>
-                                        <span className="sm:hidden">Others</span> ({selectedOtherTargets.length})
-                                    </TabsTrigger>
-                                </TabsList>
+                                {/* Suggested Goals */}
+                                {showAiSuggestions && (
+                                    <div className="space-y-4">
+                                        {/* Suggested SDGs */}
+                                        {suggestedSDGs.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h4 className="font-medium text-sm">Suggested SDGs</h4>
+                                                {suggestedSDGs.map((sdg) => (
+                                                    <div key={sdg.id} className="border rounded-lg p-3 space-y-2">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1">
+                                                                <p className="font-medium text-sm">SDG {sdg.id}</p>
+                                                                <p className="text-xs text-gray-600">{sdg.name}</p>
+                                                            </div>
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {Math.round(sdg.confidence * 100)}%
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex space-x-2">
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant={sdg.confirmed ? "default" : "outline"}
+                                                                onClick={() => confirmSDG(sdg.id)}
+                                                                className="flex-1"
+                                                            >
+                                                                <Check className="h-3 w-3 mr-1" />
+                                                                {sdg.confirmed ? "Confirmed" : "Confirm"}
+                                                            </Button>
+                                                            <Button type="button" size="sm" variant="outline" onClick={() => removeSDG(sdg.id)}>
+                                                                <X className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
 
-                                <TabsContent value="sdgs" className="space-y-4 mt-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                        {/* Suggested Agenda 2063 */}
+                                        {suggestedAgenda2063.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h4 className="font-medium text-sm">Suggested Africa's Agenda 2063</h4>
+                                                {suggestedAgenda2063.map((item) => (
+                                                    <div key={item.id} className="border rounded-lg p-3 space-y-2">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1">
+                                                                <p className="font-medium text-sm">Aspiration {item.id}</p>
+                                                                <p className="text-xs text-gray-600">{item.name}</p>
+                                                            </div>
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {Math.round(item.confidence * 100)}%
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex space-x-2">
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant={item.confirmed ? "default" : "outline"}
+                                                                onClick={() => confirmAgenda2063(item.id)}
+                                                                className="flex-1"
+                                                            >
+                                                                <Check className="h-3 w-3 mr-1" />
+                                                                {item.confirmed ? "Confirmed" : "Confirm"}
+                                                            </Button>
+                                                            <Button type="button" size="sm" variant="outline" onClick={() => removeAgenda2063(item.id)}>
+                                                                <X className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Goal Selection Tabs */}
+                                <Tabs defaultValue="sdgs">
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="sdgs" className="text-xs">
+                                            SDGs ({selectedSDGs.length})
+                                        </TabsTrigger>
+                                        <TabsTrigger value="agenda2063" className="text-xs">
+                                            A2063 ({selectedAgenda2063.length})
+                                        </TabsTrigger>
+                                        <TabsTrigger value="others" className="text-xs">
+                                            Others ({selectedOtherTargets.length})
+                                        </TabsTrigger>
+                                    </TabsList>
+
+                                    <TabsContent value="sdgs" className="mt-4 space-y-2">
                                         {SDG_GOALS.map((sdg) => (
                                             <div
                                                 key={sdg.id}
-                                                className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedSDGs.includes(sdg.id)
-                                                        ? "border-primary bg-primary/5"
-                                                        : "border-border hover:border-primary/50"
+                                                className={`p-2 border rounded text-sm cursor-pointer ${selectedSDGs.includes(sdg.id)
+                                                    ? "border-primary bg-primary/5"
+                                                    : "hover:bg-gray-50"
                                                     }`}
                                                 onClick={() => toggleSDG(sdg.id)}
                                             >
-                                                <div className="flex items-start space-x-2">
-                                                    <Checkbox checked={selectedSDGs.includes(sdg.id)} onChange={() => toggleSDG(sdg.id)} />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-sm">SDG {sdg.id}</p>
-                                                        <p className="text-xs text-muted-foreground leading-tight">{sdg.title}</p>
-                                                    </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Checkbox checked={selectedSDGs.includes(sdg.id)} />
+                                                    <span>SDG {sdg.id}: {sdg.title}</span>
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
-                                </TabsContent>
+                                    </TabsContent>
 
-                                <TabsContent value="agenda2063" className="space-y-4 mt-4">
-                                    <div className="space-y-3">
+                                    <TabsContent value="agenda2063" className="mt-4 space-y-2">
                                         {AFRICA_AGENDA_2063.map((aspiration) => (
                                             <div
                                                 key={aspiration.id}
-                                                className={`p-4 border rounded-lg cursor-pointer transition-all ${selectedAgenda2063.includes(aspiration.id)
-                                                        ? "border-primary bg-primary/5"
-                                                        : "border-border hover:border-primary/50"
+                                                className={`p-2 border rounded text-sm cursor-pointer ${selectedAgenda2063.includes(aspiration.id)
+                                                    ? "border-primary bg-primary/5"
+                                                    : "hover:bg-gray-50"
                                                     }`}
                                                 onClick={() => toggleAgenda2063(aspiration.id)}
                                             >
-                                                <div className="flex items-start space-x-3">
-                                                    <Checkbox
-                                                        checked={selectedAgenda2063.includes(aspiration.id)}
-                                                        onChange={() => toggleAgenda2063(aspiration.id)}
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-sm sm:text-base">Aspiration {aspiration.id}</p>
-                                                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                                            {aspiration.title}
-                                                        </p>
-                                                    </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Checkbox checked={selectedAgenda2063.includes(aspiration.id)} />
+                                                    <span>Aspiration {aspiration.id}: {aspiration.title}</span>
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
-                                </TabsContent>
+                                    </TabsContent>
 
-                                <TabsContent value="others" className="space-y-4 mt-4">
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                    <TabsContent value="others" className="mt-4 space-y-2">
                                         {OTHER_INTERNATIONAL_TARGETS.map((target) => (
                                             <div
                                                 key={target.id}
-                                                className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedOtherTargets.includes(target.id)
-                                                        ? "border-primary bg-primary/5"
-                                                        : "border-border hover:border-primary/50"
+                                                className={`p-2 border rounded text-sm cursor-pointer ${selectedOtherTargets.includes(target.id)
+                                                    ? "border-primary bg-primary/5"
+                                                    : "hover:bg-gray-50"
                                                     }`}
                                                 onClick={() => toggleOtherTarget(target.id)}
                                             >
-                                                <div className="flex items-start space-x-2">
-                                                    <Checkbox
-                                                        checked={selectedOtherTargets.includes(target.id)}
-                                                        onChange={() => toggleOtherTarget(target.id)}
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <Badge variant="secondary" className="text-xs mb-1">
-                                                            {target.category}
-                                                        </Badge>
-                                                        <p className="text-sm font-medium leading-tight">{target.title}</p>
-                                                    </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Checkbox checked={selectedOtherTargets.includes(target.id)} />
+                                                    <span>{target.title}</span>
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-
-                            {/* Additional Details */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="location">Location</Label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="location"
-                                            placeholder="City, Country"
-                                            className="pl-10"
-                                            value={formData.location}
-                                            onChange={(e) => handleInputChange("location", e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="date">Date of Act</Label>
-                                    <div className="relative">
-                                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="date"
-                                            type="date"
-                                            className="pl-10"
-                                            value={formData.date}
-                                            onChange={(e) => handleInputChange("date", e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="participants">Number of People Involved</Label>
-                                <div className="relative">
-                                    <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        id="participants"
-                                        placeholder="e.g., 25 volunteers, 100 beneficiaries"
-                                        className="pl-10"
-                                        value={formData.participants}
-                                        onChange={(e) => handleInputChange("participants", e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Impact and Challenges */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="impact">Impact Achieved</Label>
-                                    <Textarea
-                                        id="impact"
-                                        placeholder="Describe the positive impact and outcomes of your act..."
-                                        value={formData.impact}
-                                        onChange={(e) => handleInputChange("impact", e.target.value)}
-                                        rows={3}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="challenges">Challenges Faced</Label>
-                                    <Textarea
-                                        id="challenges"
-                                        placeholder="What challenges did you encounter and how did you overcome them?"
-                                        value={formData.challenges}
-                                        onChange={(e) => handleInputChange("challenges", e.target.value)}
-                                        rows={3}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Biography Settings */}
-                            <Card className="bg-green-50 border-green-200">
-                                <CardHeader>
-                                    <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
-                                        <BookOpen className="h-5 w-5 text-green-600" />
-                                        <span>Biography Settings</span>
-                                    </CardTitle>
-                                    <CardDescription>Control how this act appears in your public biography</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <Label htmlFor="include-biography">Include in Biography</Label>
-                                            <p className="text-sm text-muted-foreground">
-                                                Add this act to your chronological biography story
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            id="include-biography"
-                                            checked={formData.includeInBiography}
-                                            onCheckedChange={(checked) => handleInputChange("includeInBiography", checked)}
-                                        />
-                                    </div>
-
-                                    {formData.includeInBiography && (
-                                        <div className="space-y-4 pt-4 border-t border-green-200">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="bio-description">Custom Biography Description</Label>
-                                                <Textarea
-                                                    id="bio-description"
-                                                    placeholder="How should this act be described in your biography? (Leave blank to use the main description)"
-                                                    value={formData.customBiographyDescription}
-                                                    onChange={(e) => handleInputChange("customBiographyDescription", e.target.value)}
-                                                    rows={3}
-                                                />
-                                                <p className="text-xs text-muted-foreground">
-                                                    This custom description will be used in your biography instead of the main description
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label htmlFor="bio-order">Biography Order</Label>
-                                                <Input
-                                                    id="bio-order"
-                                                    type="number"
-                                                    min="1"
-                                                    placeholder="1"
-                                                    value={formData.biographyOrder}
-                                                    onChange={(e) => handleInputChange("biographyOrder", Number.parseInt(e.target.value) || 1)}
-                                                    className="w-32"
-                                                />
-                                                <p className="text-xs text-muted-foreground">
-                                                    Lower numbers appear first in your biography (1 = first)
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Privacy Settings */}
-                            <div className="space-y-3">
-                                <Label>Who can see this act?</Label>
-                                <RadioGroup value={formData.privacy} onValueChange={(value) => handleInputChange("privacy", value)}>
-                                    {PRIVACY_OPTIONS.map((option) => (
-                                        <div key={option.value} className="flex items-start space-x-2">
-                                            <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
-                                            <Label htmlFor={option.value} className="flex-1 cursor-pointer">
-                                                <div>
-                                                    <p className="font-medium text-sm sm:text-base">{option.label}</p>
-                                                    <p className="text-xs sm:text-sm text-muted-foreground">{option.description}</p>
-                                                </div>
-                                            </Label>
-                                        </div>
-                                    ))}
-                                </RadioGroup>
-                            </div>
-
-                            {/* Media Upload */}
-                            <div className="space-y-2">
-                                <Label>Add Photos or Videos</Label>
-                                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 sm:p-8 text-center">
-                                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                                    <p className="text-sm text-muted-foreground mb-2">Drag and drop files here, or click to browse</p>
-                                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                                        <Button variant="outline" size="sm">
-                                            <ImageIcon className="h-4 w-4 mr-2" />
-                                            Choose Files
-                                        </Button>
-                                        <Button variant="outline" size="sm" asChild>
-                                            <a href="/upload-artwork">
-                                                <Upload className="h-4 w-4 mr-2" />
-                                                Upload to Gallery
-                                            </a>
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">Supported formats: JPG, PNG, MP4, MOV (Max 10MB)</p>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t">
-                                <Button variant="outline" className="w-full sm:w-auto">
-                                    Save as Draft
-                                </Button>
-                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                    <Button variant="outline" className="w-full sm:w-auto">
-                                        Preview
-                                    </Button>
-                                    <Button className="w-full sm:w-auto">Share Act</Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    </TabsContent>
+                                </Tabs>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </div>
